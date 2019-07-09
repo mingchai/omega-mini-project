@@ -1,6 +1,7 @@
 import React from "react";
 import { jsonFeed } from "../requests";
 import Table from "react-bootstrap/Table";
+import DropDownAndInput from "./DropDownAndInput";
 
 class MainView extends React.Component {
   constructor(props) {
@@ -14,13 +15,32 @@ class MainView extends React.Component {
 
   setDropDown() {
     jsonFeed.one().then(data => {
-      let options = data[0];
+      let objKeys = data[0];
       let dropDownOptions = [];
-      for (let keys in options) {
+      for (let keys in objKeys) {
         dropDownOptions.push(keys);
       }
       this.setState({ dropDownOptions: dropDownOptions });
     });
+  }
+
+  updateDropDown = (selection) => {
+    this.setState({options: selection})
+  }
+
+  updateTable = (searchTerm) =>{
+    let {feed, options} = this.state;
+    let matches = [];
+
+    feed.filter(entry =>
+      entry[options].toString().includes(searchTerm)
+        ? matches.push(entry)
+        : null
+    );
+    
+    searchTerm === "" && matches === []
+      ? this.setState({ matches: feed })
+      : this.setState({ matches: matches });
   }
 
   componentDidMount() {
@@ -29,7 +49,7 @@ class MainView extends React.Component {
   }
 
   render() {
-    let { feed, options, dropDownOptions, matches } = this.state;
+    let { feed, dropDownOptions, matches } = this.state;
     if (feed === []) {
       return (
         <main>
@@ -38,52 +58,13 @@ class MainView extends React.Component {
       );
     }
 
-    const updateSearch = event => {
-      event.preventDefault();
-
-      let searchTerm = event.target.value;
-
-      let matches = [];
-      // console.log(options);
-      feed.filter(entry =>
-        entry[options].toString().includes(searchTerm)
-          ? matches.push(entry)
-          : null
-      );
-      // console.log(matches.length);
-      searchTerm === "" && matches === []
-        ? this.getFeed()
-        : this.setState({ matches: matches });
-    };
-
     return (
       <div className="App m-3">
-        <div>
-          <span>Search for </span>
-          <select
-            name="options"
-            id="options"
-            onChange={e => this.setState({ options: e.target.value })}
-          >
-            <option>Select Type</option>
-            {dropDownOptions.map(option => (
-              <option key={dropDownOptions.indexOf(option)}>{option}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <span> containing </span>
-          <input
-            type="search"
-            name="searchbar"
-            id="searchbar"
-            onChange={updateSearch}
-          />
-        </div>
-        <div> 
-          (Please note that search input may be case sensitive)
-        </div>
-        <hr />
+        <DropDownAndInput 
+          dropDownOptions = {dropDownOptions} 
+          updateDropDown = {this.updateDropDown} 
+          updateTable = {this.updateTable}
+        />
         {this.state.matches === null || this.state.matches === [] ? (
           <>
             <Table striped bordered hover responsive variant="dark">
@@ -120,7 +101,7 @@ class MainView extends React.Component {
               <thead>
                 <tr>
                   {dropDownOptions.map(option => (
-                    <td>
+                    <td key={dropDownOptions.indexOf(option)}>
                       <strong>{option}</strong>
                     </td>
                   ))}
