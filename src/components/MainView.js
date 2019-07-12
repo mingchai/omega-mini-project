@@ -29,7 +29,6 @@ class MainView extends React.Component {
   }
 
   updateTable = (searchTerm) =>{
-    this.getFeed();
     let {feed, options} = this.state;
     let matches = [];
 
@@ -46,7 +45,7 @@ class MainView extends React.Component {
 
   componentDidMount() {
     this.setDropDown();
-    // this.getFeed();
+    this.getFeed();
   }
 
   render() {
